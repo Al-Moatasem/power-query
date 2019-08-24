@@ -1,0 +1,39 @@
+let
+    StartYear = 2018,
+    LastYear = 2020,
+    WeekStartDay = 6,
+    Today = DateTime.Date(DateTime.LocalNow()),
+    ListDates = List.Dates( 
+        #date(StartYear,1,1),
+        Number.From( #date(LastYear,12,31) - #date(StartYear,1,1) )+1,
+        #duration(1,0,0,0)  ),
+    #"Converted to Table" = Table.FromList(ListDates, Splitter.SplitByNothing(), type table[Date = date], null, ExtraValues.Error),
+    #"+C Date Key" = Table.AddColumn(#"Converted to Table", "Date Key", each 
+                      Date.Year([Date]) * 10000 + Date.Month([Date]) * 100 +Date.Day([Date]), Int64.Type),
+    #"+C Year" = Table.AddColumn(#"+C Date Key", "Year", each Date.Year([Date]), Int64.Type),
+    #"+C Year Short" = Table.AddColumn(#"+C Year", "Year Short", each Text.End(Text.From([Year], "ar-EG"), 2), type text),
+    #"+C Month Num" = Table.AddColumn(#"+C Year Short", "Month Num", each Date.Month([Date]), Int64.Type),
+    #"+C Month Name Arabic" = Table.AddColumn(#"+C Month Num", "Month Name Ar", each Date.MonthName([Date], "ar-EG"), type text),
+    #"+C Month Name" = Table.AddColumn(#"+C Month Name Arabic", "Month Name", each Date.MonthName([Date], "en-US"), type text),
+    #"+C Month Name Short" = Table.AddColumn(#"+C Month Name", "Month Name Short", each Text.Start([Month Name], 3), type text),
+    #"+C Month & Year" = Table.AddColumn(#"+C Month Name Short", "Month Year", each Text.Combine({[Month Name], Text.From([Year])}, " "), type text),
+    #"+C Month Short & Year" = Table.AddColumn(#"+C Month & Year", "Month Short En & Year", each Text.Combine({[Month Name Short], Text.From([Year])}, " "), type text),
+    #"+C Year Month Num" = Table.AddColumn(#"+C Month Short & Year", "Year Month Num", each [Year] * 100 + [Month Num], Int64.Type),
+    #"+C Quarter Num" = Table.AddColumn(#"+C Year Month Num", "Quarter Num", each Date.QuarterOfYear([Date]), Int64.Type),
+    #"+C Quarter Name" = Table.AddColumn(#"+C Quarter Num", "Quarter Name", each "Q" & Text.From([Quarter Num]), type text),
+    #"+C Quarter Year" = Table.AddColumn(#"+C Quarter Name", "Quarter Year", each Text.Combine({[Quarter Name], Text.From([Year])}, "-"), type text),
+    #"+C Quarter Year Short" = Table.AddColumn(#"+C Quarter Year", "Quarter & Year Short", each Text.Combine({[Quarter Name], [Year Short]}, "-"), type text),
+    #"+C Day of Month" = Table.AddColumn(#"+C Quarter Year Short", "Day of Month", each Date.Day([Date]), Int64.Type),
+    #"+C Day Name Ar" = Table.AddColumn(#"+C Day of Month", "Day Name Ar", each Date.DayOfWeekName([Date]), type text),
+    #"+C Day Name" = Table.AddColumn(#"+C Day Name Ar", "Day Name", each Date.DayOfWeekName([Date],"en-US"), type text),
+    #"+C Day Name Short" = Table.AddColumn(#"+C Day Name", "Day Name Short", each Text.Start(Text.From([Day Name]), 3), type text),
+    #"+C Day of Week" = Table.AddColumn(#"+C Day Name Short", "Day of Week", each Date.DayOfWeek([Date], WeekStartDay ), Int64.Type),
+    #"+C Weekday Flag" = Table.AddColumn(#"+C Day of Week", "Weekday Flag", each if [Day of Week] = 6 then "Weekend" else if [Day of Week] = 0 then "Weekend" else "Weekday", type text),
+    #"+C Year Offset" = Table.AddColumn(#"+C Weekday Flag", "Year Offset", each ( Date.Year(Today) - [Year] ) * -1, Int64.Type),
+    #"+C Month Offset" = Table.AddColumn(#"+C Year Offset", "Month Offset", each (
+                        ( Date.Year(Today) - [Year] ) * 12 + ( Date.Month(Today) - [Month Num] ) ) * -1),
+    #"+C Day Offset" = Table.AddColumn(#"+C Month Offset", "Day Offset", each Number.From( Today - [Date] ) * -1, Int64.Type),
+    #"+C Past Today Future Flag" = Table.AddColumn(#"+C Day Offset", "Past / Future Flag", each 
+                                    if [Day Offset] = 0 then "Today" else if  [Day Offset] > 0 then "Future" else "Past", type text)
+in
+    #"+C Past Today Future Flag"
