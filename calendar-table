@@ -1,6 +1,6 @@
 let
-    StartYear = 2018,
-    LastYear = 2020,
+    StartYear = 2017,
+    LastYear = 2022,
     WeekStartDay = 6,
     Today = DateTime.Date(DateTime.LocalNow()),
     ListDates = List.Dates( 
@@ -22,7 +22,8 @@ let
     #"+C Quarter Num" = Table.AddColumn(#"+C Year Month Num", "Quarter Num", each Date.QuarterOfYear([Date]), Int64.Type),
     #"+C Quarter Name" = Table.AddColumn(#"+C Quarter Num", "Quarter Name", each "Q" & Text.From([Quarter Num]), type text),
     #"+C Quarter Year" = Table.AddColumn(#"+C Quarter Name", "Quarter Year", each Text.Combine({[Quarter Name], Text.From([Year])}, "-"), type text),
-    #"+C Quarter Year Short" = Table.AddColumn(#"+C Quarter Year", "Quarter & Year Short", each Text.Combine({[Quarter Name], [Year Short]}, "-"), type text),
+    #"+C Quarter Year Order" = Table.AddColumn(#"+C Quarter Year", "Quarter Year Order", each [Year] * 10 + [Quarter Num] , Int64.Type),
+    #"+C Quarter Year Short" = Table.AddColumn(#"+C Quarter Year Order", "Quarter & Year Short", each Text.Combine({[Quarter Name], [Year Short]}, "-"), type text),
     #"+C Day of Month" = Table.AddColumn(#"+C Quarter Year Short", "Day of Month", each Date.Day([Date]), Int64.Type),
     #"+C Day Name Ar" = Table.AddColumn(#"+C Day of Month", "Day Name Ar", each Date.DayOfWeekName([Date]), type text),
     #"+C Day Name" = Table.AddColumn(#"+C Day Name Ar", "Day Name", each Date.DayOfWeekName([Date],"en-US"), type text),
